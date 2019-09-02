@@ -1,0 +1,3 @@
+terraformのsample集
+
+- 公開されてるmodule使うのが楽なので基本それを使う方針
