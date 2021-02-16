@@ -1,3 +1,4 @@
 terraformのsample集
 
 - 公開されてるmodule使うのが楽なので基本それを使う方針
+- 自分でmodule化したほうが使いやすそうであれば、自作module作る

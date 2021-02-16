@@ -12,6 +12,10 @@ module "vpc" {
 
   enable_dns_hostnames = true
 
+  enable_nat_gateway     = var.enable_nat_gateway
+  single_nat_gateway     = var.single_nat_gateway
+  one_nat_gateway_per_az = var.one_nat_gateway_per_az
+
   tags = {
     Terraform   = "true"
     Environment = var.env
