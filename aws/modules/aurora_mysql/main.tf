@@ -9,7 +9,7 @@ resource "random_string" "this" {
 }
 
 resource "aws_ssm_parameter" "this" {
-  name        = "/${var.env}/aurora_mysql/master_pass"
+  name        = "/${var.project}-${var.env}/aurora_mysql/master_pass"
   description = "The parameter description"
   type        = "SecureString"
   value       = random_string.this.result
@@ -17,13 +17,14 @@ resource "aws_ssm_parameter" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
 resource "aws_db_parameter_group" "this" {
-  name        = "${var.env}-aurora-db-57-parameter-group"
+  name        = "${var.project}-${var.env}-aurora-db-57-parameter-group"
   family      = "aurora-mysql5.7"
-  description = "${var.env}-aurora-db-57-parameter-group"
+  description = "${var.project}-${var.env}-aurora-db-57-parameter-group"
 
   dynamic "parameter" {
     for_each = var.db_parameters
@@ -37,13 +38,14 @@ resource "aws_db_parameter_group" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
 resource "aws_rds_cluster_parameter_group" "this" {
-  name        = "${var.env}-aurora-57-cluster-parameter-group"
+  name        = "${var.project}-${var.env}-aurora-57-cluster-parameter-group"
   family      = "aurora-mysql5.7"
-  description = "${var.env}-aurora-57-cluster-parameter-group"
+  description = "${var.project}-${var.env}-aurora-57-cluster-parameter-group"
 
   dynamic "parameter" {
     for_each = var.cluster_parameters
@@ -57,22 +59,24 @@ resource "aws_rds_cluster_parameter_group" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.env}-${var.name}"
+  name       = "${var.project}-${var.env}-${var.name}"
   subnet_ids = var.subnet_ids
 
   tags = {
-    Name        = "${var.env}-${var.name}"
+    Name        = "${var.project}-${var.env}-${var.name}"
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
 resource "aws_rds_cluster" "this" {
-  cluster_identifier              = "${var.env}-${var.name}"
+  cluster_identifier              = "${var.project}-${var.env}-${var.name}"
   engine                          = "aurora-mysql"
   engine_version                  = var.engine_version
   db_subnet_group_name            = aws_db_subnet_group.this.name
@@ -88,15 +92,16 @@ resource "aws_rds_cluster" "this" {
   skip_final_snapshot             = "true"
 
   tags = {
-    Name        = "${var.env}-${var.name}"
+    Name        = "${var.project}-${var.env}-${var.name}"
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
 resource "aws_rds_cluster_instance" "this" {
   count                        = var.replica_count
-  identifier_prefix            = "${var.env}-${var.name}"
+  identifier_prefix            = "${var.project}-${var.env}-${var.name}"
   cluster_identifier           = aws_rds_cluster.this.id
   instance_class               = var.instance_type
   engine                       = aws_rds_cluster.this.engine
@@ -109,6 +114,7 @@ resource "aws_rds_cluster_instance" "this" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 

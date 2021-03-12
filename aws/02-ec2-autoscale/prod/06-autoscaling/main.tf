@@ -1,6 +1,6 @@
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.projct}-${var.env}"
   }
 }
 
@@ -14,23 +14,24 @@ data "aws_subnet_ids" "private_subnets" {
 
 data "aws_security_group" "ec2_web" {
   tags = {
-    Name = "${var.env}-ec2-web"
+    Name = "${var.projct}-${var.env}-ec2-web"
   }
 }
 
 data "aws_iam_instance_profile" "ec2_web" {
-  name = "${var.env}-ec2-web"
+  name = "${var.projct}-${var.env}-ec2-web"
 }
 
 data "aws_lb_target_group" "web" {
-  name = "${var.env}-web"
+  name = "${var.projct}-${var.env}-web"
 }
 
 module "asg-web" {
   source = "../../../modules/asg"
 
-  env  = var.env
-  name = "web"
+  project = var.project
+  env     = var.env
+  name    = "web"
 
   image_id = "ami-041cf17aea0d17496" # https://github.com/megun/packer-samples/blob/master/amzn2.pkr.hcl で作ったやつ
 

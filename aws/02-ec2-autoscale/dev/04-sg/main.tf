@@ -1,6 +1,6 @@
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.project}-${var.env}"
   }
 }
 
@@ -9,7 +9,7 @@ module "security-group_alb_web" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.17.0"
 
-  name        = "${var.env}-alb-web"
+  name        = "${var.project}-${var.env}-alb-web"
   description = "Security group for alb-web"
   vpc_id      = data.aws_vpc.main.id
 
@@ -22,6 +22,7 @@ module "security-group_alb_web" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
@@ -29,7 +30,7 @@ module "security-group_ec2_web" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.17.0"
 
-  name        = "${var.env}-ec2-web"
+  name        = "${var.project}-${var.env}-ec2-web"
   description = "Security group for ec2-web"
   vpc_id      = data.aws_vpc.main.id
 
@@ -46,5 +47,6 @@ module "security-group_ec2_web" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }

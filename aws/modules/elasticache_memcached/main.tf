@@ -1,12 +1,11 @@
 resource "aws_elasticache_subnet_group" "this" {
-  name       = "${var.env}-${var.name}"
+  name       = "${var.project}-${var.env}-${var.name}"
   subnet_ids = var.subnet_ids
 }
 
 resource "aws_elasticache_parameter_group" "this" {
-  name   = "${var.env}-${var.name}"
+  name   = "${var.project}-${var.env}-${var.name}"
   family = "memcached${regex("[0-9]+.[0-9]+", var.engine_version)}"
-
 
   dynamic "parameter" {
     for_each = var.parameters
@@ -18,7 +17,7 @@ resource "aws_elasticache_parameter_group" "this" {
 }
 
 resource "aws_elasticache_cluster" "this" {
-  cluster_id           = "${var.env}-${var.name}"
+  cluster_id           = "${var.project}-${var.env}-${var.name}"
   engine               = "memcached"
   node_type            = var.node_type
   num_cache_nodes      = var.num_cache_nodes
@@ -34,6 +33,7 @@ resource "aws_elasticache_cluster" "this" {
     Name        = "${var.env}-${var.name}"
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 

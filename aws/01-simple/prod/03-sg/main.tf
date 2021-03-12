@@ -1,6 +1,6 @@
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.project}-${var.env}"
   }
 }
 
@@ -8,7 +8,7 @@ module "security-group_ec2_web" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.17.0"
 
-  name        = "${var.env}-ec2-web"
+  name        = "${var.project}-${var.env}-ec2-web"
   description = "Security group for web"
   vpc_id      = data.aws_vpc.main.id
 
@@ -21,6 +21,7 @@ module "security-group_ec2_web" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
@@ -28,7 +29,7 @@ module "security-group_rds_mysql" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.17.0"
 
-  name        = "${var.env}-rds-mysql"
+  name        = "${var.project}-${var.env}-rds-mysql"
   description = "Security group for mysql"
   vpc_id      = data.aws_vpc.main.id
 
@@ -45,6 +46,7 @@ module "security-group_rds_mysql" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
@@ -52,7 +54,7 @@ module "security-group_elasticache_memcached" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.17.0"
 
-  name        = "${var.env}-elasticache-memcached"
+  name        = "${var.project}-${var.env}-elasticache-memcached"
   description = "Security group for memcached"
   vpc_id      = data.aws_vpc.main.id
 
@@ -69,5 +71,6 @@ module "security-group_elasticache_memcached" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }

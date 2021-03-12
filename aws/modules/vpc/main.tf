@@ -2,7 +2,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "v2.64.0"
 
-  name = var.env
+  name = "${var.project}-${var.env}"
   cidr = var.cidr
 
   azs              = var.azs
@@ -18,6 +18,7 @@ module "vpc" {
 
   tags = {
     Terraform   = "true"
+    Project     = var.project
     Environment = var.env
   }
 

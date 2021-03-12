@@ -1,11 +1,11 @@
 data "aws_route53_zone" "local" {
-  name         = "${var.env}.local"
+  name         = "${var.project}-${var.env}.local"
   private_zone = true
 }
 
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.project}-${var.env}"
   }
 }
 
@@ -19,15 +19,16 @@ data "aws_subnet_ids" "db_subnets" {
 
 data "aws_security_group" "aurora_mysql" {
   tags = {
-    Name = "${var.env}-rds-mysql"
+    Name = "${var.project}-${var.env}-rds-mysql"
   }
 }
 
 module "aurora_mysql" {
   source = "../../../modules/aurora_mysql"
 
-  env  = var.env
-  name = "aurora-mysql"
+  project = var.project
+  env     = var.env
+  name    = "aurora-mysql"
 
   engine_version = "5.7.mysql_aurora.2.09.1"
 

@@ -1,6 +1,7 @@
 module "dev_vpc" {
   source = "../../../modules/vpc"
 
+  project         = var.project
   env             = var.env
   cidr            = "10.1.0.0/16"
   azs             = ["ap-northeast-1a", "ap-northeast-1c", "ap-northeast-1d"]

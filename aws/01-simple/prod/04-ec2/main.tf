@@ -4,7 +4,7 @@ data "aws_route53_zone" "public" {
 
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.project}-${var.env}"
   }
 }
 
@@ -18,12 +18,12 @@ data "aws_subnet_ids" "public_subnets" {
 
 data "aws_security_group" "ec2_web" {
   tags = {
-    Name = "${var.env}-ec2-web"
+    Name = "${var.project}-${var.env}-ec2-web"
   }
 }
 
 data "aws_iam_instance_profile" "ec2_web" {
-  name = "${var.env}-ec2-web"
+  name = "${var.project}-${var.env}-ec2-web"
 }
 
 data "template_file" "user_data" {
@@ -33,8 +33,9 @@ data "template_file" "user_data" {
 module "ec2_web" {
   source = "../../../modules/ec2"
 
-  env  = var.env
-  name = "web"
+  project = var.project
+  env     = var.env
+  name    = "web"
 
   instance_count = 2
 

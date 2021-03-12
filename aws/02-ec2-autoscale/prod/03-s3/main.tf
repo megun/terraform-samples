@@ -2,7 +2,7 @@ module "s3_aws_logs" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "1.17.0"
 
-  bucket = "megun-${var.env}-aws-logs"
+  bucket = "megun-${var.project}-${var.env}-aws-logs"
   acl    = "log-delivery-write"
 
   attach_elb_log_delivery_policy = true
@@ -18,5 +18,6 @@ module "s3_aws_logs" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project = var.project
   }
 }

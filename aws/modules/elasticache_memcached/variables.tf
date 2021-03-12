@@ -1,3 +1,8 @@
+variable "project" {
+  type    = string
+  default = ""
+}
+
 variable "env" {
   type    = string
   default = ""

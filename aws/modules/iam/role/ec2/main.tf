@@ -5,7 +5,7 @@ module "iam_role_ec2" {
   create_role             = true
   create_instance_profile = true
 
-  role_name = "${var.env}-ec2-${var.role_name}"
+  role_name = "${var.project}-${var.env}-ec2-${var.role_name}"
 
   custom_role_policy_arns = var.attach_policies
   #number_of_custom_role_policy_arns = 2
@@ -16,6 +16,7 @@ module "iam_role_ec2" {
 
   tags = {
     Terraform   = "true"
+    Project     = var.project
     Environment = var.env
   }
 }

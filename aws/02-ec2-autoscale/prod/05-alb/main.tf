@@ -1,6 +1,6 @@
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.projct}-${var.env}"
   }
 }
 
@@ -14,7 +14,7 @@ data "aws_subnet_ids" "public_subnets" {
 
 data "aws_security_group" "alb_web" {
   tags = {
-    Name = "${var.env}-alb-web"
+    Name = "${var.projct}-${var.env}-alb-web"
   }
 }
 
@@ -31,14 +31,15 @@ data "aws_route53_zone" "demo" {
 module "alb_web" {
   source = "../../../modules/alb"
 
-  env  = var.env
-  name = "web"
+  project = var.project
+  env     = var.env
+  name    = "web"
 
   vpc_id          = data.aws_vpc.main.id
   subnets         = data.aws_subnet_ids.public_subnets.ids
   security_groups = [data.aws_security_group.alb_web.id]
 
-  access_logs_bucket = "megun-${var.env}-aws-logs"
+  access_logs_bucket = "megun-${var.projct}-${var.env}-aws-logs"
 
   certificate_arn = data.aws_acm_certificate.demo.arn
 

@@ -5,9 +5,10 @@ resource "aws_eip" "this" {
   instance = module.ec2_instance.id[count.index]
 
   tags = {
-    Name        = var.instance_count > 1 ? format("%s-ec2-%s-%d", var.env, var.name, count.index + 1) : "${var.env}-ec2-${var.name}"
+    Name        = var.instance_count > 1 ? format("%s-%s-ec2-%s-%d", var.project, var.env, var.name, count.index + 1) : "${var.project}-${var.env}-ec2-${var.name}"
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 
@@ -15,7 +16,7 @@ module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "2.16.0"
 
-  name           = "${var.env}-${var.name}"
+  name           = "${var.project}-${var.env}-${var.name}"
   instance_count = var.instance_count
 
   ami           = var.ami
@@ -37,6 +38,7 @@ module "ec2_instance" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }
 

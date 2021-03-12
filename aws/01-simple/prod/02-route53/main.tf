@@ -1,11 +1,11 @@
 data "aws_vpc" "main" {
   tags = {
-    Name = var.env
+    Name = "${var.project}-${var.env}"
   }
 }
 
 resource "aws_route53_zone" "private" {
-  name = "${var.env}.local"
+  name = "${var.project}-${var.env}.local"
 
   vpc {
     vpc_id = data.aws_vpc.main.id
@@ -14,5 +14,6 @@ resource "aws_route53_zone" "private" {
   tags = {
     Terraform   = "true"
     Environment = var.env
+    Project     = var.project
   }
 }

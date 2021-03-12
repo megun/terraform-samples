@@ -1,6 +1,7 @@
 module "iam_role_ec2_web" {
   source = "../../../modules/iam/role/ec2"
 
+  project   = var.project
   env       = var.env
   role_name = "web"
   attach_policies = [
