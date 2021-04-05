@@ -7,11 +7,19 @@ Parameters:
       - manage
       - dev
       - prod
+  BucketName:
+    Type: String
+    Default: ""
+Conditions:
+  IsUseDefaultBucketName: !Equals [!Ref BucketName, ""]
 Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub megun-terraform-samples-tfstate-${Env}
+      BucketName: !If
+      - IsUseDefaultBucketName
+      - !Sub megun-terraform-samples-tfstate-${Env}
+      - !Ref BucketName
       AccessControl: Private
       BucketEncryption:
         ServerSideEncryptionConfiguration:
