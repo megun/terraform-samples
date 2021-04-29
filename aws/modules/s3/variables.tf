@@ -71,3 +71,8 @@ variable "grants" {
   type    = any
   default = []
 }
+
+variable "website" {
+  type = any
+  default = []
+}
