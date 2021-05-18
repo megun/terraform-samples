@@ -13,6 +13,11 @@ variable "name" {
   default = ""
 }
 
+variable "engine_mode" {
+  type    = string
+  default = "provisioned"
+}
+
 variable "engine_version" {
   type    = string
   default = ""
@@ -40,7 +45,7 @@ variable "replica_count" {
 
 variable "instance_type" {
   type    = string
-  default = ""
+  default = null
 }
 
 variable "enabled_cloudwatch_logs_exports" {
@@ -91,4 +96,19 @@ variable "db_parameters" {
 variable "dns_zone_id" {
   type    = string
   default = null
+}
+
+variable "enable_http_endpoint" {
+  type    = string
+  default = null
+}
+
+variable "scaling_configuration" {
+  type    = map(string)
+  default = {}
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
 }

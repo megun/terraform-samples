@@ -9,16 +9,12 @@ resource "random_string" "this" {
 }
 
 resource "aws_ssm_parameter" "this" {
-  name        = "/${var.project}-${var.env}/aurora_mysql/master_pass"
+  name        = "/${var.project}-${var.env}/${var.name}/master_pass"
   description = "The parameter description"
   type        = "SecureString"
   value       = random_string.this.result
 
-  tags = {
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
-  }
+  tags = var.tags
 }
 
 resource "aws_db_parameter_group" "this" {
@@ -35,11 +31,7 @@ resource "aws_db_parameter_group" "this" {
     }
   }
 
-  tags = {
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
-  }
+  tags = var.tags
 }
 
 resource "aws_rds_cluster_parameter_group" "this" {
@@ -56,28 +48,20 @@ resource "aws_rds_cluster_parameter_group" "this" {
     }
   }
 
-  tags = {
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
-  }
+  tags = var.tags
 }
 
 resource "aws_db_subnet_group" "this" {
   name       = "${var.project}-${var.env}-${var.name}"
   subnet_ids = var.subnet_ids
 
-  tags = {
-    Name        = "${var.project}-${var.env}-${var.name}"
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
-  }
+  tags = var.tags
 }
 
 resource "aws_rds_cluster" "this" {
   cluster_identifier              = "${var.project}-${var.env}-${var.name}"
   engine                          = "aurora-mysql"
+  engine_mode                     = var.engine_mode
   engine_version                  = var.engine_version
   db_subnet_group_name            = aws_db_subnet_group.this.name
   vpc_security_group_ids          = var.security_group_ids
@@ -91,12 +75,27 @@ resource "aws_rds_cluster" "this" {
   enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
   skip_final_snapshot             = "true"
 
-  tags = {
-    Name        = "${var.project}-${var.env}-${var.name}"
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
+  # for serverless options
+  enable_http_endpoint = var.enable_http_endpoint
+
+  dynamic "scaling_configuration" {
+    for_each = length(var.scaling_configuration) == 0 ? [] : [var.scaling_configuration]
+    iterator = config
+
+    content {
+      auto_pause               = lookup(config.value, "auto_pause", null)
+      max_capacity             = lookup(config.value, "max_capacity", null)
+      min_capacity             = lookup(config.value, "min_capacity", null)
+      seconds_until_auto_pause = lookup(config.value, "seconds_until_auto_pause", null)
+      timeout_action           = lookup(config.value, "timeout_action", null)
+    }
   }
+
+  lifecycle {
+    ignore_changes = [master_password]
+  }
+
+  tags = var.tags
 }
 
 resource "aws_rds_cluster_instance" "this" {
@@ -111,11 +110,7 @@ resource "aws_rds_cluster_instance" "this" {
   preferred_maintenance_window = var.preferred_maintenance_window
   auto_minor_version_upgrade   = false
 
-  tags = {
-    Terraform   = "true"
-    Environment = var.env
-    Project     = var.project
-  }
+  tags = var.tags
 }
 
 resource "aws_route53_record" "write" {
@@ -129,7 +124,7 @@ resource "aws_route53_record" "write" {
 }
 
 resource "aws_route53_record" "read" {
-  count = var.dns_zone_id != null ? 1 : 0
+  count = (var.engine_mode == "serverless" || var.dns_zone_id == null) ? 0 : 1
 
   zone_id = var.dns_zone_id
   name    = "read-${var.name}"
@@ -137,46 +132,3 @@ resource "aws_route53_record" "read" {
   ttl     = 30
   records = [aws_rds_cluster.this.reader_endpoint]
 }
-
-/*
-module "aurora_mysql" {
-  source  = "terraform-aws-modules/rds-aurora/aws"
-  version = "3.3.0"
-
-  name = "${var.env}-${var.name}"
-
-  engine = "aurora-mysql"
-
-  engine_version = var.engine_version
-
-  vpc_id  = var.vpc_id
-  subnets = var.subnets
-
-  replica_count = var.replica_count
-
-  instance_type     = var.instance_type
-  storage_encrypted = true
-  apply_immediately = true
-
-  db_parameter_group_name         = aws_db_parameter_group.rds-aurora.id
-  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.rds-aurora.id
-
-  enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
-
-  auto_minor_version_upgrade = var.auto_minor_version_upgrade
-  backup_retention_period    = var.backup_retention_period
-
-  database_name = var.database_name
-  username      = var.username
-  #password      = aws_ssm_parameter.aurora_mysql_master_pass.value
-  password = "hoge"
-
-  performance_insights_enabled = true
-
-  tags = {
-    Name        = "${var.env}-${var.name}"
-    Terraform   = "true"
-    Environment = var.env
-  }
-}
-*/
