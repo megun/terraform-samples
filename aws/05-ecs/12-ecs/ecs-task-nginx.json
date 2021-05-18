@@ -1,0 +1,41 @@
+[
+    {
+        "name": "front-nginx",
+        "image": "${ecr_repository_url}:latest",
+        "cpu": 10,
+        "memory": 128,
+        "essential": true,
+        "portMappings": [
+            {
+                "hostPort": 80,
+                "containerPort": 80,
+                "protocol": "tcp"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "/ecs/frontend",
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "nginx"
+            }
+        },
+        "healthCheck": {
+            "command": [ "CMD-SHELL", "curl http://localhost/ || exit 1" ],
+            "interval": 30,
+            "retries": 3,
+            "timeout": 5
+        },
+        "environment": [
+            {
+                "name": "BACK_HOST",
+                "value": "${backend_host}"
+            },
+            {
+                "name": "BACK_PORT",
+                "value": "${backend_port}"
+            }
+        ],
+        "volumesFrom": []
+    }
+]

@@ -1,0 +1,55 @@
+[
+    {
+        "name": "back-go",
+        "image": "${ecr_repository_url}:latest",
+        "cpu": 10,
+        "memory": 128,
+        "essential": true,
+        "portMappings": [
+            {
+                "hostPort": ${backend_port},
+                "containerPort": ${backend_port},
+                "protocol": "tcp"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${cw_loggroup_backend}",
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "go"
+            }
+        },
+        "healthCheck": {
+            "command": [ "CMD-SHELL", "curl http://localhost:${backend_port}/ || exit 1" ],
+            "interval": 30,
+            "retries": 3,
+            "timeout": 5
+        },
+        "environment": [
+            {
+                "name": "DB_HOST",
+                "value": "${db_host}"
+            },
+            {
+                "name": "DB_PORT",
+                "value": "${db_port}"
+            },
+            {
+                "name": "DB_NAME",
+                "value": "${db_name}"
+            },
+            {
+                "name": "DB_USER",
+                "value": "${db_user}"
+            }
+        ],
+        "secrets": [
+            {
+                "name": "DB_PASSWORD",
+                "valueFrom": "${db_pass_path}"
+            }
+        ],
+        "volumesFrom": []
+    }
+]
