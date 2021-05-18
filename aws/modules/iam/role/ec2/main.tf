@@ -1,6 +1,6 @@
 module "iam_role_ec2" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "3.6.0"
+  version = "4.1.0"
 
   create_role             = true
   create_instance_profile = true
