@@ -1,68 +1,106 @@
-module "asg" {
-  source  = "terraform-aws-modules/autoscaling/aws"
-  version = "3.8.0"
+resource "null_resource" "create_asg_tags" {
+  count = length(keys(merge(var.default_tags, var.tags)))
 
-  name = "${var.env}-${var.name}"
-
-  # Launch configuration
-  lc_name = "${var.env}-${var.name}"
-
-  image_id             = var.image_id
-  instance_type        = var.instance_type
-  security_groups      = var.security_groups
-  iam_instance_profile = var.iam_instance_profile
-
-  spot_price = var.spot_price == null ? null : var.spot_price
-
-  enable_monitoring = var.enable_monitoring
-
-  root_block_device = [
-    {
-      volume_size = var.root_volume_size
-      volume_type = var.root_volume_type
-    },
-  ]
-
-  # Auto scaling group
-  asg_name                  = "${var.env}-${var.name}"
-  vpc_zone_identifier       = var.subnet_ids
-  health_check_type         = var.health_check_type
-  target_group_arns         = var.target_group_arns
-  min_size                  = var.min_size
-  max_size                  = var.max_size
-  desired_capacity          = var.desired_capacity
-  wait_for_capacity_timeout = var.wait_for_capacity_timeout
-
-  tags_as_map = {
-    Environment = var.env
-    Terraform   = "true"
+  triggers = {
+    "key"                 = keys(merge(var.default_tags, var.tags))[count.index]
+    "value"               = values(merge(var.default_tags, var.tags))[count.index]
+    "propagate_at_launch" = true
   }
 }
 
-resource "aws_autoscaling_schedule" "this" {
-  for_each = { for schedule in var.schedules : schedule.scheduled_action_name => schedule }
+resource "aws_launch_template" "this" {
+  name = var.lt_name
 
-  scheduled_action_name = each.value.scheduled_action_name
-  min_size              = each.value.min_size
-  max_size              = each.value.max_size
-  desired_capacity      = each.value.desired_capacity
+  update_default_version = var.update_default_version
 
-  recurrence             = each.value.schedule
-  autoscaling_group_name = module.asg.this_autoscaling_group_name
+  image_id = var.image_id
+
+  vpc_security_group_ids = var.vpc_security_group_ids
+
+  dynamic "iam_instance_profile" {
+    for_each = var.iam_instance_profile == null ? [] : [1]
+    content {
+      name = var.iam_instance_profile
+    }
+  }
+
+  dynamic "block_device_mappings" {
+    for_each = var.block_device_mappings
+    iterator = s
+    content {
+      device_name = s.value.device_name
+      dynamic "ebs" {
+        for_each = [s.value.ebs]
+        content {
+          delete_on_termination = lookup(ebs.value, "delete_on_termination", null)
+          encrypted             = lookup(ebs.value, "encrypted", null)
+          iops                  = lookup(ebs.value, "iops", null)
+          snapshot_id           = lookup(ebs.value, "snapshot_id", null)
+          throughput            = lookup(ebs.value, "throughput", null)
+          volume_size           = lookup(ebs.value, "volume_size", null)
+          volume_type           = lookup(ebs.value, "volume_type", null)
+        }
+      }
+    }
+  }
+
+  user_data = var.user_data
+
+  tags = merge(var.default_tags, var.tags)
 }
 
+resource "aws_autoscaling_group" "this" {
+  name = var.asg_name
 
-/*
-module "asg_schedule_web" {
-  source = "./schedule"
+  max_size         = var.max_size
+  min_size         = var.min_size
+  desired_capacity = var.desired_capacity
 
-  up_min_size         = 1
-  up_max_size         = 5
-  up_desired_capacity = 1
+  health_check_type   = var.health_check_type
+  vpc_zone_identifier = var.vpc_zone_identifier
 
-  down_schedule = "0 1 * * *"
-  up_schedule   = "0 0 * * *"
+  dynamic "mixed_instances_policy" {
+    for_each = var.mixed_instances_policy == null ? [] : [var.mixed_instances_policy]
+    content {
+      dynamic "instances_distribution" {
+        for_each = lookup(mixed_instances_policy.value, "instances_distribution", null) == null ? [] : [mixed_instances_policy.value.instances_distribution]
+        iterator = i
+        content {
+          on_demand_allocation_strategy            = lookup(i.value, "on_demand_allocation_strategy", null)
+          on_demand_base_capacity                  = lookup(i.value, "on_demand_base_capacity", null)
+          on_demand_percentage_above_base_capacity = lookup(i.value, "on_demand_percentage_above_base_capacity", null)
+          spot_allocation_strategy                 = lookup(i.value, "spot_allocation_strategy", null)
+          spot_instance_pools                      = lookup(i.value, "spot_instance_pools", null)
+          spot_max_price                           = lookup(i.value, "spot_max_price", null)
+        }
+      }
+      launch_template {
+        launch_template_specification {
+          launch_template_id = aws_launch_template.this.id
+          version            = "$Default"
+        }
+        dynamic "override" {
+          for_each = lookup(mixed_instances_policy.value, "override", null) == null ? [] : mixed_instances_policy.value.override
+          content {
+            instance_type     = lookup(override.value, "instance_type", null)
+            weighted_capacity = lookup(override.value, "weighted_capacity", null)
+            dynamic "launch_template_specification" {
+              for_each = lookup(override.value, "launch_template_specification", null) == null ? [] : [override.value.launch_template_specification]
+              iterator = ol
+              content {
+                launch_template_id = lookup(ol.value, "launch_template_id", null)
+                version            = lookup(ol.value, "version", null)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
-  autoscaling_group_name = module.asg-web.this_autoscaling_group_name
+  protect_from_scale_in = var.protect_from_scale_in
+
+  tags = concat(
+    null_resource.create_asg_tags.*.triggers,
+  )
 }
-*/
