@@ -15,7 +15,8 @@ $ aws cloudformation deploy \
   --stack-name terraform-samples-preparation-${env} \
   --region ap-northeast-1 \
   --template-file template.yaml \
-  --parameter-overrides Env="${env}"
+  --parameter-overrides Env="${env}" \
+  --profile ${env}
 
 bucket名指定する場合
 $ aws cloudformation deploy \
@@ -23,8 +24,8 @@ $ aws cloudformation deploy \
   --stack-name terraform-samples-preparation-${env} \
   --region ap-northeast-1 \
   --template-file template.yaml \
-  --parameter-overrides Env="${env}" BucketName=megun-terraform-samples-tfstate2-${Env}
-  --profile megun002
+  --parameter-overrides Env="${env}" BucketName=megun-terraform-samples-tfstate2-${env} \
+  --profile ${env}
 
 # changeset確認
 $ aws cloudformation describe-change-set --change-set-name arn:aws:cloudformation:ap-northeast-1:xxxx:changeSet/awscli-cloudformation-package-deploy-xxxxxxx/xxxx-xxxx-xxxx-xxxx-xxxx
@@ -34,5 +35,6 @@ $ aws cloudformation deploy \
   --stack-name terraform-samples-preparation-${env} \
   --region ap-northeast-1 \
   --template-file template.yaml \
-  --parameter-overrides Env="${env}"
+  --parameter-overrides Env="${env}" \
+  --profile ${env}
 ```
